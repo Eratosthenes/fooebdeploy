@@ -1,0 +1,124 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    keel.sh/policy: force
+    keel.sh/trigger: poll
+    run: tailor
+  name: tailor
+  namespace: dev
+spec:
+  replicas: 1
+  revisionHistoryLimit: 5
+  selector:
+    matchLabels:
+      run: tailor
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        run: tailor
+    spec:
+      containers:
+      - env:
+        - name: ADS_DEBUG
+          value: 'False'
+        - name: TEST
+          value: ads
+        - name: SERVICE
+          value: tailor
+        - name: ENVIRONMENT
+          value: dev
+        - name: GUNICORN_WORKERS
+          value: '2'
+        - name: GUNICORN_WORKER_CLASS
+          value: gevent
+        - name: GUNICORN_TIMEOUT
+          value: '30'
+        - name: GUNICORN_WORKER_CONNECTIONS
+          value: '1000'
+        - name: GUNICORN_MAX_REQUESTS
+          value: '1000'
+        - name: GUNICORN_MAX_REQUESTS_JITTER
+          value: '100'
+        - name: SQLALCHEMY_ECHO
+          value: 'False'
+        - name: SQLALCHEMY_POOL_SIZE
+          value: '5'
+        - name: SQLALCHEMY_MAX_OVERFLOW
+          value: '10'
+        - name: SQLALCHEMY_POOL_TIMEOUT
+          value: '10'
+        - name: SQLALCHEMY_TRACK_MODIFICATIONS
+          value: 'False'
+        - name: SQLALCHEMY_RECORD_QUERIES
+          value: 'False'
+        image: 084981688622.dkr.ecr.us-east-1.amazonaws.com/tailor:tailor-v0.0.1
+        imagePullPolicy: Always
+        livenessProbe:
+          failureThreshold: 5
+          httpGet:
+            httpHeaders:
+            - name: X-Amzn-Trace-Id
+              value: livenessProbe
+            path: /alive
+            port: 80
+          initialDelaySeconds: 30
+          periodSeconds: 60
+          successThreshold: 1
+          timeoutSeconds: 2
+        name: tailor
+        ports:
+        - containerPort: 80
+          protocol: TCP
+        readinessProbe:
+          failureThreshold: 1
+          httpGet:
+            httpHeaders:
+            - name: X-Amzn-Trace-Id
+              value: readinessProbe
+            path: /ready
+            port: 80
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          successThreshold: 5
+          timeoutSeconds: 2
+        resources:
+          limits:
+            cpu: 1000m
+            memory: 500Mi
+          requests:
+            cpu: 5m
+            memory: 100Mi
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /gconfig/
+          name: gunicorn-config
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - configMap:
+          name: gunicorn-config
+        name: gunicorn-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tailor
+  namespace: dev
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    run: tailor
+  sessionAffinity: None
