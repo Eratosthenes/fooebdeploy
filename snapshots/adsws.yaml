@@ -1,0 +1,226 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    run: adsws
+  name: adsws
+  namespace: dev
+spec:
+  replicas: 1
+  revisionHistoryLimit: 5
+  selector:
+    matchLabels:
+      run: adsws
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        run: adsws
+    spec:
+      containers:
+      - env:
+        - name: ADS_DEBUG
+          value: "True"
+        - name: TEST
+          value: ads
+        - name: SERVICE
+          value: adsws
+        - name: ENVIRONMENT
+          value: dev
+        - name: SOLR_SERVICE_URL
+          value: http://dev.solr.kube.adslabs.org/solr/collection1
+        - name: ADSWS_SOLR_SERVICE_SOLR_APP_SQLALCHEMY_DATABASE_URI
+          value: postgresql+psycopg2://solr_service:mkkjtdrfg2cvojilk6ndrtf@testing.ci1iae2ep00k.us-east-1.rds.amazonaws.com:5432/solr_service
+        - name: SQLALCHEMY_DATABASE_URI
+          value: postgresql+psycopg2://adsabs:20yoAD$!@testing.ci1iae2ep00k.us-east-1.rds.amazonaws.com:5432/adsws
+        - name: SECRET_KEY
+          value: f82bbe20ae86f73b26217c9bde786102e9ab0d09df6d314dafeec6cf0152a41c58fb2652567443c610
+        - name: SQLALCHEMY_BINDS
+          value: '{"solr_service": "postgresql+psycopg2://solr_service:mkkjtdrfg2cvojilk6ndrtf@testing.ci1iae2ep00k.us-east-1.rds.amazonaws.com:5432/solr_service"}'
+        - name: WEBSERVICES
+          value: '{"http://harbour": "/harbour", "adsws.solr_service.solr": "/search",
+            "http://vault": "/vault", "http://export": "/export", "http://biblib":
+            "/biblib", "http://citation-helper": "/citation_helper", "http://object":
+            "/objects", "http://vis": "/vis", "http://recommender":
+            "/recommender", "http://graphics": "/graphics", "http://orcid":
+            "/orcid", "http://metrics": "/metrics", "http://author-affiliation": "/author-affiliation", "http://resolver-service":
+            "/resolver", "http://turbobee-service": "/store"}'
+        - name: CORS_DOMAINS
+          value: '["http://0.0.0.0:8000", "http://localhost:8000", "http://hourly.adslabs.org",
+            "https://beta.arxiv.org", "https://arxiv.org",
+            "http://ui.adslabs.org", "https://ui.adsabs.harvard.edu", "http://ui.adsabs.harvard.edu",
+            "https://staging-bumblebee.elasticbeanstalk.com", "https://devui.adsabs.harvard.edu",
+            "https://staging-bumblebee.us-east-1.elasticbeanstalk.com", "https://experimental-bumblebee.us-east-1.elasticbeanstalk.com",
+            "https://demo.adsabs.harvard.edu", "https://dev.adsabs.harvard.edu", "http://adsx.cfa.harvard.edu:8888", "http://adsabs.harvard.edu", "http://cdsads.u-strasbg.fr",
+            "http://ads.nao.ac.jp", "http://ads.astro.puc.cl", "http://esoads.eso.org",
+            "http://ukads.nottingham.ac.uk", "http://ads.iucaa.ernet.in", "http://ads.inasan.ru",
+            "http://ads.bao.ac.cn", "http://ads.mao.kiev.ua", "http://ads.ari.uni-heidelberg.de",
+            "http://ads.arsip.lipi.go.id", "http://ads.on.br", "http://saaoads.chpc.ac.za"]'
+        - name: OAUTH2_CACHE_TYPE
+          value: redis
+        - name: OAUT2_CACHE_REDIS_HOST
+          value: staging.jgntjg.0001.use1.cache.amazonaws.com
+        - name: OAUTH2_CACHE_REDIS_PORT
+          value: "6379"
+        - name: LOG_LEVEL
+          value: "30"
+        - name: LOGGING_LEVEL
+          value: "INFO"
+        - name: RATELIMIT_STORAGE_URL
+          value: redis://staging.jgntjg.0001.use1.cache.amazonaws.com:6379
+        - name: RATELIMIT_HEADERS_ENABLED
+          value: "True"
+        - name: RATELIMIT_SWALLOW_ERRORS
+          value: "True"
+        - name: RATELIMIT_KEY_PREFIX
+          value: limiter
+        - name: GUNICORN_WORKERS
+          value: "2"
+        - name: GUNICORN_WORKER_CLASS
+          value: gevent
+        - name: GUNICORN_TIMEOUT
+          value: "30"
+        - name: GUNICORN_WORKER_CONNECTIONS
+          value: "1000"
+        - name: GUNICORN_MAX_REQUESTS
+          value: "1000"
+        - name: GUNICORN_MAX_REQUESTS_JITTER
+          value: "100"
+        - name: GUNICORN_DEBUG
+          value: "False"
+        - name: GUNICORN_LOG_LEVEL
+          value: "30"
+        - name: SQLALCHEMY_ECHO
+          value: "False"
+        - name: SQLALCHEMY_POOL_SIZE
+          value: "10"
+        - name: SQLALCHEMY_MAX_OVERFLOW
+          value: "40"
+        - name: SQLALCHEMY_POOL_TIMEOUT
+          value: "10"
+        - name: SQLALCHEMY_TRACK_MODIFICATIONS
+          value: "False"
+        - name: SQLALCHEMY_RECORD_QUERIES
+          value: "False"
+        - name: TESTING
+          value: "False"
+        - name: GOOGLE_RECAPTCHA_PRIVATE_KEY
+          value: "6LeZokYUAAAAAFO86IYzxx1WYM-vvbTD4dm1WumI"
+        - name: MAIL_DEFAULT_SENDER
+          value: ads@cfa.harvard.edu
+        - name: MAIL_SERVER
+          value: postfix-relay.kube.adslabs.org
+        - name: MAIL_PORT
+          value: "25"
+        - name: MAIL_USE_TLS
+          value: "False"
+        - name: MAIL_USERNAME
+        - name: MAIL_PASSWORD
+        - name: VAULT_ENDPOINT
+          value: http://adsws/v1/vault/query
+        - name: LIBRARY_ENDPOINT
+          value: http://adsws/v1/biblib/libraries
+        image: 084981688622.dkr.ecr.us-east-1.amazonaws.com/kube/adsws:v1.0.46.debug
+        volumeMounts:
+        - name: gunicorn-config
+          mountPath: /gconfig/
+        imagePullPolicy: Always
+        name: adsws
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 80
+            httpHeaders:
+            - name: X-Amzn-Trace-Id
+              value: readinessProbe
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 2
+          successThreshold: 5
+          failureThreshold: 1
+        livenessProbe:
+          httpGet:
+            path: /alive
+            port: 80
+            httpHeaders:
+            - name: X-Amzn-Trace-Id
+              value: livenessProbe
+          initialDelaySeconds: 30
+          periodSeconds: 60
+          timeoutSeconds: 2
+          successThreshold: 1
+          failureThreshold: 5
+        ports:
+        - containerPort: 80
+          protocol: TCP
+        resources: 
+          limits:
+            cpu: 1000m
+            memory: 500Mi
+          requests:
+            cpu: 100m
+            memory: 200Mi
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      volumes:
+      - name: gunicorn-config
+        configMap:
+          name: gunicorn-config
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: adsws
+  namespace: dev
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    run: adsws
+  sessionAffinity: None
+---
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: adsws
+  namespace: dev
+spec:
+  maxReplicas: 3
+  minReplicas: 1
+  scaleTargetRef:
+    apiVersion: extensions/v1beta1
+    kind: Deployment
+    name: adsws
+  targetCPUUtilizationPercentage: 75
+---
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: adsws
+  namespace: dev
+spec:
+  schedule: "*/5 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: hello
+            image: 084981688622.dkr.ecr.us-east-1.amazonaws.com/kube/adsws:v1.0.46.debug
+            args:
+            - /bin/sh
+            - -c
+            - python /adsws/manage.py accounts cleanup_tokens; python /adsws/manage.py accounts cleanup_clients; python /adsws/manage.py accounts cleanup_users
+          restartPolicy: OnFailure
+
